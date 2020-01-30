@@ -25,6 +25,13 @@ const Ingredients = () => {
     })
   }, []); // [] => componentDidMount
 
+  useEffect(() => {
+    // выполнится дважды
+    // 1. пустой массив
+    // 2. все что придет с бэка
+    console.log('RENDERING INGREDIENTS', userIngredients);
+  }, [userIngredients])
+
   const addIngredientHandler = ingredient => {
     fetch('https://react-hooks-df7fd.firebaseio.com/ingredients.json', {
       method: 'POST',
