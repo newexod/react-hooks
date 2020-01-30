@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
@@ -8,33 +8,15 @@ const Ingredients = () => {
   const [userIngredients, setUserIngredients] = useState([]);
 
   useEffect(() => {
-    fetch('https://react-hooks-df7fd.firebaseio.com/ingredients.json')
-    .then(res => res.json())
-    .then(resData => {
-      const loadedIngredients = [];
-
-      for (const key in resData) {
-        loadedIngredients.push({
-          id: key,
-          title: resData[key].title,
-          amount: resData[key].amount
-        })
-      }
-
-      setUserIngredients(loadedIngredients);
-    })
-  }, []); // [] => componentDidMount
-
-  useEffect(() => {
     // выполнится дважды
     // 1. пустой массив
     // 2. все что придет с бэка
     console.log('RENDERING INGREDIENTS', userIngredients);
   }, [userIngredients])
 
-  const filteredIngredientsHandler = (filteredIngredients) => {
+  const filteredIngredientsHandler = useCallback(filteredIngredients => {
     setUserIngredients(filteredIngredients);
-  }
+  }, [])
 
   const addIngredientHandler = ingredient => {
     fetch('https://react-hooks-df7fd.firebaseio.com/ingredients.json', {
