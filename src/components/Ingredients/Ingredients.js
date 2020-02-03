@@ -4,6 +4,7 @@ import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
 import Search from './Search';
 import ErrorModal from '../UI/ErrorModal';
+import useHttp from '../../hooks/http';
 
 const ingredientReducer = (currentIngredients, action) => {
   switch(action.type) {
@@ -18,24 +19,9 @@ const ingredientReducer = (currentIngredients, action) => {
   }
 };
 
-const httpReducer = (curHttpState, action) => {
-  switch(action.type) {
-    case 'SEND':
-      return {loading: true, error: null};
-    case 'RESPONSE':
-      return {...curHttpState, loading: false};
-    case 'ERROR':
-      return {loading: false, error: action.errorMessage};
-    case 'CLEAR':
-      return {...curHttpState, error: null};
-    default: 
-      throw new Error('Should not be reached!');
-  }
-};
-
 const Ingredients = () => {
   const [userIngredients, dispatch] = useReducer(ingredientReducer, []);
-  const [httpState, dispatchHttp] = useReducer(httpReducer, {loading: false, error: null});
+  const {isLoading, data, error, sendRequest} = useHttp();
   // const [userIngredients, setUserIngredients] = useState([]);
   // const [isLoading, setIsLoading] = useState(false);
   // const [error, setError] = useState();
@@ -54,53 +40,34 @@ const Ingredients = () => {
 
   const addIngredientHandler = useCallback(ingredient => {
     // setIsLoading(true);
-    dispatchHttp({type: 'SEND'});
+    // dispatchHttp({type: 'SEND'});
 
-    fetch('https://react-hooks-df7fd.firebaseio.com/ingredients.json', {
-      method: 'POST',
-      body: JSON.stringify(ingredient),
-      headers: {'Content-Type': 'application/json'}
-    })
-      .then(res => {
-        // setIsLoading(false);
-        dispatchHttp({type: 'RESPONSE'});
+    // fetch('https://react-hooks-df7fd.firebaseio.com/ingredients.json', {
+    //   method: 'POST',
+    //   body: JSON.stringify(ingredient),
+    //   headers: {'Content-Type': 'application/json'}
+    // })
+    //   .then(res => {
+    //     // setIsLoading(false);
+    //     dispatchHttp({type: 'RESPONSE'});
 
-        return res.json();
-      }).then(resData => {
-        // setUserIngredients(prevIngredients => [
-        //   ...prevIngredients, 
-        //   { id: resData.name, ...ingredient }
-        // ]);
-        dispatch({type: 'ADD', ingredient: {id: resData.name, ...ingredient}});
-      });
+    //     return res.json();
+    //   }).then(resData => {
+    //     // setUserIngredients(prevIngredients => [
+    //     //   ...prevIngredients, 
+    //     //   { id: resData.name, ...ingredient }
+    //     // ]);
+    //     dispatch({type: 'ADD', ingredient: {id: resData.name, ...ingredient}});
+    //   });
   }, []);
 
   const removeIngredientHandler = useCallback(ingredientId => {
-    // setIsLoading(true);
-    dispatchHttp({type: 'SEND'});
-
-    fetch(`https://react-hooks-df7fd.firebaseio.com/ingredients/${ingredientId}.json`, {
-      method: 'DELETE',
-    })
-      .then(res => {
-        // setIsLoading(false);
-        dispatchHttp({type: 'RESPONSE'});
-
-        // setUserIngredients(prevIngredients =>
-        //   prevIngredients.filter(ingredient => ingredient.id !== ingredientId)
-        // )
-        dispatch({type: 'DELETE', id: ingredientId});
-      })
-      .catch(err => {
-        dispatchHttp({type: 'ERROR', errorMessage: 'Something went wrong!'});
-        //  setError('Something went wrong!');
-        //  setIsLoading(false);
-      });
-  }, []);
+    sendRequest(`https://react-hooks-df7fd.firebaseio.com/ingredients/${ingredientId}.json`, 'DELETE');
+  }, [sendRequest]);
 
   const clearError = useCallback(() => {
     // setError(null);
-    dispatch({type: 'CLEAR'});
+    // dispatch({type: 'CLEAR'});
   }, []);
 
   const ingredientList = useMemo(() => {
@@ -114,11 +81,11 @@ const Ingredients = () => {
 
   return (
     <div className="App">
-      {httpState.error && <ErrorModal onClose={clearError}>{httpState.error}</ErrorModal>}
+      {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
 
       <IngredientForm 
         onAddIngredient={addIngredientHandler} 
-        loading={httpState.loading} 
+        loading={isLoading} 
       />
 
       <section>
