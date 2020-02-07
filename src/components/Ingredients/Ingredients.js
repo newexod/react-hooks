@@ -21,48 +21,38 @@ const ingredientReducer = (currentIngredients, action) => {
 
 const Ingredients = () => {
   const [userIngredients, dispatch] = useReducer(ingredientReducer, []);
-  const {isLoading, data, error, sendRequest} = useHttp();
-  // const [userIngredients, setUserIngredients] = useState([]);
-  // const [isLoading, setIsLoading] = useState(false);
-  // const [error, setError] = useState();
+  const {isLoading, data, error, sendRequest, reqExtra, reqIdentifier} = useHttp();
 
   useEffect(() => {
-    // выполнится дважды
-    // 1. пустой массив
-    // 2. все что придет с бэка
-    console.log('RENDERING INGREDIENTS', userIngredients);
-  }, [userIngredients])
+    if (!isLoading && !error && reqIdentifier === 'REMOVE_INGREDIENT') {
+      dispatch({type: 'DELETE', id: reqExtra});
+    } else if (!isLoading && !error && reqIdentifier === 'ADD_INGREDIENT') {
+      dispatch({type: 'ADD', ingredient: {id: data.name, ...reqExtra}});
+    }
+  }, [data, reqExtra, reqIdentifier, isLoading, error])
 
   const filteredIngredientsHandler = useCallback(filteredIngredients => {
-    // setUserIngredients(filteredIngredients);
     dispatch({type: 'SET', ingredients: filteredIngredients});
   }, [])
 
   const addIngredientHandler = useCallback(ingredient => {
-    // setIsLoading(true);
-    // dispatchHttp({type: 'SEND'});
-
-    // fetch('https://react-hooks-df7fd.firebaseio.com/ingredients.json', {
-    //   method: 'POST',
-    //   body: JSON.stringify(ingredient),
-    //   headers: {'Content-Type': 'application/json'}
-    // })
-    //   .then(res => {
-    //     // setIsLoading(false);
-    //     dispatchHttp({type: 'RESPONSE'});
-
-    //     return res.json();
-    //   }).then(resData => {
-    //     // setUserIngredients(prevIngredients => [
-    //     //   ...prevIngredients, 
-    //     //   { id: resData.name, ...ingredient }
-    //     // ]);
-    //     dispatch({type: 'ADD', ingredient: {id: resData.name, ...ingredient}});
-    //   });
+    sendRequest(
+      'https://react-hooks-df7fd.firebaseio.com/ingredients.json', 
+      'POST', 
+      JSON.stringify(ingredient), 
+      ingredient,
+      'ADD_INGREDIENT'
+    );
   }, []);
 
   const removeIngredientHandler = useCallback(ingredientId => {
-    sendRequest(`https://react-hooks-df7fd.firebaseio.com/ingredients/${ingredientId}.json`, 'DELETE');
+    sendRequest(
+      `https://react-hooks-df7fd.firebaseio.com/ingredients/${ingredientId}.json`, 
+      'DELETE', 
+      null, 
+      ingredientId,
+      'REMOVE_INGREDIENT'
+    );
   }, [sendRequest]);
 
   const clearError = useCallback(() => {
